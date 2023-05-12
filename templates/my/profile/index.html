@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+{% load render_table from django_tables2 %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+</br>
+<h3 class="breadcrumb">Профиль/</h3>
+<h1>Изменить данные учетной записи {{ request.user.email }}</h1>
+</br>
+ <form method="POST" class="form-group">
+        {% csrf_token %}
+        {{ form.as_p }}
+     <a href="/my/profile/addresses">Адреса пользователя</a><p></p>
+        <button type="submit" class="btn btn-success">Сохранить</button>
+ </form>
+{% endblock %}

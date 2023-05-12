@@ -1,0 +1,6 @@
+{% extends 'index.html' %}
+{% load render_table from django_tables2 %}
+{% block content %}
+    {% if suffix %}<a class="btn btn-primary" href="/my/create_{{suffix}}">Создать</a><p></p>{% endif %}
+{% render_table table %}
+{% endblock %}

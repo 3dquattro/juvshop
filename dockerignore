@@ -1,0 +1,12 @@
+/venv
+/static — копия
+/__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+.env
+*.log
+*.sqlite3
+*.pyc
+db.sqlite3

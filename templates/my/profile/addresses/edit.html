@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+{% block title %}Изменить адрес{% endblock %}
+{% block content %}
+</br>
+<h3 class="breadcrumb"><a href="/my/profile">Профиль</a>/<a href="/my/profile/addresses">Адреса</a>/Изменение</h3></br>
+<p></p>
+ <h1>Изменить адрес</h1>
+    </br>
+ <form method="POST" class="form-group">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Сохранить</button>
+ </form>
+{% endblock %}

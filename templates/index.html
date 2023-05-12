@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css">
+</head>
+
+<body>
+{% block scriptsTop %}{% endblock %}
+    <header>
+        <div class="row">
+            <div class="col-xxl-12 col-xl-12 col-l-12 col-12"><img src="{{ STATIC_URL }}/img/logo.png" class="img-thumbnail rounded mx-auto d-block " alt="Логотип"></div>
+        </div>
+    </header>
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-3 col-xxl-3 col-l-12 col-12">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item"><a class="nav-link active" href="/">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/catalog/1">Каталог</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/constructor">Конструктор изделий</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary" data-bs-toggle="offcanvas" href="#authcanvas" role="button" aria-controls="auth">{% if not request.user.is_authenticated %}Авторизация{% else %}Меню пользователя{% endif %}</a></li>
+                </ul>
+            </div>
+            <div class="col-12 col-xl-9 col-xxl-9 col-l-12">
+                <div class="row">
+                    <div class="col" id="content">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="authcanvas" aria-labelledby="authLabel">
+        <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="authLabel"> {% if not request.user.is_authenticated %}Авторизация{% else %}Меню пользователя{% endif %}</h5>
+
+  </div>
+  <div class="offcanvas-body">
+      {% if not request.user.is_authenticated %}
+      {% include 'registration/login_form.html' %}
+      {% else %}
+          {% include 'registration/logout.html' %}
+      {% endif %}
+      </div>
+    </div>
+    </div>
+    <footer>
+        <div class="col">(c) 3dquattro, 2023</div>
+    </footer>
+
+    <script src="{{ STATIC_URL }}/js/bootstrap.min.js"></script>
+    {% block endscript %}{% endblock %}
+</body>
+
+</html>

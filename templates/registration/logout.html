@@ -1,0 +1,10 @@
+<form method="post" action="/my/logout">
+  {% csrf_token %}
+  <label for="email">Здравствуйте, {{ request.user }}!</label><br>
+  <a href="/my/">Личный кабинет</a><br>
+  <a href="/my/cart">Корзина</a><br>
+  <a href="/my/jewelry">Мои изделия</a><br>
+  <a href="/my/orders">Мои заказы</a><br>
+  <a href="/my/messages">Сообщения</a>
+  <button type="submit">Выйти</button>
+</form>

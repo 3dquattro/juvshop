@@ -1,0 +1,35 @@
+{% extends "index.html" %}
+{% block title %}Заказы{% endblock %}
+{% block content %}
+<div class="container">
+
+</br>
+    {% for message in messages %}
+    <div class="row message">
+    <div class="{% if request.user == message.sender %}col-sm-12 col-md-5 offset-md-7 justify-content-sm-center justify-content-md-end justify-content-lg-end justify-content-xl-end justify-content-xxl-end{% else %}col-md-5{% endif %}">
+        <div class="{% if request.user == message.sender %}border rounded-0 border-2 border-secondary{% else %}border rounded-0 border-2 border-primary{% endif %}">
+            <div class="{% if request.user == message.sender %}text-start bg-secondary{% else %}text-end bg-primary{% endif %}"><strong>{{ message.sender__name }}</strong></div>
+            <div class="{% if request.user == message.sender %}text-start{% else %}text-end{% endif %}">
+                <p>{{ message.content }}</p><small class="fw-light">{{ message.send_date}}</small>
+            </div>
+        </div>
+    </div>
+</div>
+    {% endfor %}
+</br>
+</br>
+    <div class="row">
+        <div class="col">
+            <p>Написать:</p>
+            <form method="post">
+                {% csrf_token %}
+                <textarea class="form-control" name="text"></textarea>
+                <input type="hidden" value="{{ dialogue }}" name="dialogue">
+                <button class="btn btn-secondary" type="submit">Отправить</button>
+            </form>
+        </div>
+    </div>
+
+</br>
+</div>
+{% endblock %}

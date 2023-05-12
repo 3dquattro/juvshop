@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+{% block title %}Изделие - {{jewelry.name}},{{jewelry.material}} {% endblock %}
+{% block content %}
+<div>
+<img src="/storage/{{ jewelry.preview }}" alt="{{jewelry.name}},{{jewelry.material}}">
+    <p>Материал - {{ material }}</p>
+    <p>Ориентировочный вес (19 размер) - ??? г.</p>
+    <p>Стоимость на момент заказа (19 размер) - {{ jewelry.cost }} р.</p>
+    <a href="/position/id/copy">Скопировать изделие (открыть конструктор)</a>
+</div>
+{% endblock %}

@@ -1,0 +1,439 @@
+{% extends "index.html" %}
+{% block title %}Коньструктор{% endblock %}
+{% block scriptsTop %}
+	{% load static %}
+    {% csrf_token %}
+	{{materials|json_script:"materials_json" }}
+	{{prtypes|json_script:"prtypes_json"}}
+	{{jewelry|json_script:"jewelry"}}
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+    <script type="importmap">
+			{
+				"imports": {
+					"three": "{{ STATIC_URL }}js/three.module.js",
+					"three/addons/": "{{ STATIC_URL }}js/",
+					"dat": "{{ STATIC_URL }}js/dat.gui.module.js"
+				}
+			}
+	</script>
+	<script id="nullobject" type="application/json">{"id": 0, "name": "", "type": 1, "material": 1, "user": 3, "parts": []}</script>
+{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated and jewelry.is_editable or not jewelry and user.is_authenticated %}
+
+    <form id="saveForm"><label class="form-label">Имя</label><input class="form-control" type="text" id="name">
+    </br>
+    <button class="btn btn-primary" type="submit">Сохранить</button></form>{% endif %}
+{% endblock %}
+
+{% block endscript %}
+	<script type="module">
+//Импорт главного фреймворка, three.js
+import * as THREE from 'three';
+
+//import { GUI } from 'three/addons/lil-gui.module.min.js';
+//Импорт библиотеки dat.gui
+import { GUI } from 'dat';
+import { OBJLoader } from "https://threejs.org/examples/jsm/loaders/OBJLoader.js";
+import { RGBELoader} from "three/addons/RGBELoader.js";
+//import { MaterialLoader } from "three/addons/MaterialLoader.js";
+//Импорт контроллера конструктора, тут орбитальные
+import { OrbitControls } from 'three/addons/OrbitControls.js';
+//Инициализация сцены, рендерера, камеры
+let camera, scene, renderer;
+let textureenv;
+let defaultmaterial;
+var isComplete = false;
+var isFirstTime = false;
+const params = {
+	clipIntersection: true,
+	planeConstant: 0,
+	showHelpers: false
+};
+//Загрузим материал
+new RGBELoader()
+		.setPath( '/storage/hdr/' )
+		.load( 'studio007.hdr', function ( texture ) {
+
+			texture.mapping = THREE.EquirectangularReflectionMapping;
+
+			scene.background = texture;
+			scene.environment = texture;
+			textureenv = texture;
+			render();
+			});
+
+let materialmet; //Материал по умолчанию, нечто похожее на серебро
+materialmet = new THREE.MeshStandardMaterial( {
+color: 0xC0C0C0,
+roughness: 0.2,
+metalness: 0.7,
+envMap: textureenv,
+} );
+
+
+//Чтение зашитых в шаблон json-справочников
+var materials = JSON.parse(document.getElementById('materials_json').textContent);
+var productTypes = JSON.parse(document.getElementById('prtypes_json').textContent);
+var empty_jewelry = JSON.parse('{"id": 0, "name": "unnamed", "type": 1, "material": 1, "user": 3, "parts": [1, 2]}');
+//На текущий момент, примем по умолчанию пустой ювелирку
+var product = empty_jewelry;
+var pr_type_selector = 0;
+var material_selector = 0;
+var selected_product_type = 0;
+// Массив и объекты под контроллеры
+var parts_controllers = [];
+var parts_slots = {};
+var product_slots = {};
+var current_material = {};
+const loader = new OBJLoader();
+//interface init
+const gui = new GUI({autoPlace: false});
+
+//[{id:name},...] => {name1:id1,name2:id2...}
+
+function jsonConvert(array, field1, field2) {
+  return array.reduce((result, item) => {
+    result[String(item[field1])] = item[field2];
+    return result;
+  }, {});
+}
+/*function jsonconvert(array,field1,field2)
+{
+	var result = {};
+	for(var i=0;i<array.length;i++)
+	{
+			result[String(array[i][field1])]=array[i][field2];
+	}
+	return result;
+}*/
+
+
+//Объект с массивом свойств под переключатель материалов
+var material_options = jsonConvert(materials,'name','id');
+//Объект с массивом свойств под переключатель типов изделий
+var product_types_options = jsonConvert(productTypes,'name','id');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+//При изменении значения селектора ТИПА изделия
+async function pr_type_onChange()
+{
+    isComplete=false;
+    selected_product_type = pr_type_selector.__select.selectedOptions[0].value;
+    var parttypes = [];
+    let response = await fetch('/api/parttypes/'+String(selected_product_type));
+    if (response.ok)
+    { // если HTTP-статус в диапазоне 200-299
+        // получаем тело ответа
+        parttypes = await response.json();
+
+    }
+    else
+    {
+        alert("Ошибка HTTP: " + response.status);
+    }
+    if (selected_product_type != pr_type_selector.__select.selectedOptions[0].value)
+    {
+        selected_product_type = pr_type_selector.__select.selectedOptions[0].value;
+        response = await fetch('/api/parttypes/'+String(selected_product_type));
+        if (response.ok) {parttypes = await response.json();}
+    }
+    //Удалим старые контроллеры слотов деталей
+    for(var i=0;i<parts_controllers.length;i++)
+    {
+        gui.remove(parts_controllers[i]);
+    }
+    parts_controllers = [];
+    //Очистим массив, удаляем детали
+    for(var key in parts_slots)
+    {
+        remove_part(key);
+    }
+    for(var i=0;i<parttypes.length;i++)
+    {
+    var parts = [];
+    parts_slots['slot_'+String(i)] = 0;
+    var parts_options = {};
+    //Запросим по апи детали нужной категории
+    let response = await fetch('/api/parts/'+String(parttypes[i].id));
+    if (response.ok)
+    {
+        parts = await response.json();
+        //Преобразуем записи вида {id:..,name:..} в {name1:id1,...}
+        parts_options = jsonConvert(parts,'name','id');
+    }
+    else
+    {
+        //Или вернем ошибку
+        alert("Ошибка HTTP: " + response.status);
+    }
+    //Вставим в массив контроллеров
+    parts_controllers.push(gui.add(parts_slots,'slot_'+String(i),parts_options)
+    .name(parttypes[i].name).onFinishChange(function ()
+        {
+            draw_part_slot(this.property);
+        }
+    ));
+    }
+    isComplete=true;
+}
+function interface_init()
+{
+//Добавим контроллер-переключатель для материала изделия
+material_selector = gui.add(product, 'material', material_options)
+.name("Материал").onFinishChange((value) => materialChange(value));
+pr_type_selector = gui.add(product,'type',product_types_options)
+.name("Тип изделия")
+.onChange(() => pr_type_onChange());
+//
+if((document.getElementById('jewelry').textContent == "\"\"" ||
+    document.getElementById('jewelry').textContent == "" ) &
+    !isFirstTime)
+{
+	isFirstTime = true;
+    material_selector.setValue(material_selector.__select.options[0].value);
+    console.log('material is set: '+material_selector.__select.options[0].value);
+	pr_type_selector.setValue(pr_type_selector.__select.options[0].value);
+    console.log('product type is set:' + pr_type_selector.__select.options[0].value);
+}
+container.appendChild(gui.domElement);
+}
+//Смена материала
+async function materialChange(index)
+{
+var loader = new THREE.MaterialLoader();
+for(var i=0;i<materials.length;i++)
+{
+	if (materials[i]['id'] == index )
+	{
+		defaultmaterial = await loader.parse(materials[i]['materialJSON']);
+		break;
+	}
+}
+for (var i=0;i<Object.keys(product_slots).length;i++)
+{
+	product_slots['slot_'+String(i)].traverse(
+	function ( child ) {
+	if ( child instanceof THREE.Mesh ) {
+		child.material = defaultmaterial;
+		}
+	}
+	);
+}
+render();
+}
+
+//Метод, удаляющий деталь со сцены
+function remove_part(slot)
+{
+	if (product_slots[slot] !== undefined)
+    {
+        scene.remove(product_slots[slot]);
+        delete product_slots[slot];
+        render();
+    }
+}
+async function load_and_render_part(slot)
+{
+    var id = parts_slots[slot];
+    var part = {};
+    let response = await fetch('/api/part/'+String(id));
+    if (response.ok)
+        {
+            part = await response.json();
+            //alert(part['ModelFile']);
+            //Загрузим модель OBJLoaderом
+            loader.load(
+                part['ModelFile'],
+                function(object)
+                {
+                object.traverse( function ( child ) {
+                    if ( child instanceof THREE.Mesh )
+                    {
+                        child.material = defaultmaterial;
+                    }
+                } );
+                //Запишем в слот ... объекта объектов?
+                product_slots[slot] = object;
+                product_slots[slot].material = defaultmaterial;
+                //Запишем в сцену объект
+                scene.add(product_slots[slot]);
+                render();
+                }
+            )
+        }
+    else
+    {
+        alert("Ошибка HTTP: " + response.status);
+    }
+}
+//Метод рисования деталей
+async function draw_part_slot(slot)
+{
+//Проверка на существование объекта в сцене
+    remove_part(slot);
+    //API-запрос на деталь
+    await load_and_render_part(slot);
+
+}
+async function load_product(product1)
+{
+//Поменять интерфейс
+	pr_type_selector.setValue(product1["type"]);
+    product['id'] = product1['id'];
+    product['name'] = product1['name'];
+	await material_selector.setValue(product1["material"]);
+	while (!isComplete)
+	{
+		await sleep(150);
+	}
+	//Перевыбрать детали из массива parts
+	for(var i=0;i<product1["parts"].length;i++)
+	{
+		controllers_cycle:
+		for(var j=0;j<parts_controllers.length;j++)
+		{
+			for(var k=0;k<parts_controllers[j].__select.options.length;k++)
+			{
+				if (parts_controllers[j].__select.options[k].value == product1["parts"][i])
+				{
+					parts_controllers[j].setValue(product1["parts"][i]);
+					break controllers_cycle;
+					break;
+				}
+			}
+		}
+	}
+}
+// Дальше идет отрисовка сфер.
+const container = document.getElementById('content');
+interface_init();
+
+init();
+
+let editable_product = JSON.parse(document.getElementById('jewelry').textContent);
+var saveform = document.getElementById("saveForm");
+if (saveform)
+{
+        saveform.onsubmit = function (evt) {saveProduct(evt);
+}
+};
+if (editable_product != "")
+{
+	await load_product(editable_product);
+}
+render();
+
+function getCookie(cname) {
+     var name = cname + "=";
+     var ca = document.cookie.split(';');
+     for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if(c.indexOf(name) == 0)
+           return c.substring(name.length,c.length);
+     }
+     return "";
+}
+// Обработчик сохранения с помощью формы
+function saveProduct(event)
+{
+    event.preventDefault();
+    var productName = document.getElementById("name").value;
+    product['name'] = productName;
+    product['parts'] = [];
+    product['id'] = parseInt(product['id']);
+    product['user'] = parseInt({{request.user.id}});
+    product['type'] = parseInt(product['type']);
+    for(var element in Object.values(parts_slots))
+    {
+        product['parts'].push(parseInt(element));
+    }
+    product['parts'] = Object.values(parts_slots);
+    product['material'] = parseInt(product['material']);
+    renderer.setSize( 300, 300 );
+    render();
+    product['preview'] = renderer.domElement.toDataURL("image/png");
+    renderer.setSize( container.clientWidth, container.clientWidth );
+    render();
+    var responseBody = JSON.stringify(product);
+   // alert('x-csrf-token: '+String(document.querySelector('[name=csrfmiddlewaretoken]').value))
+    if (product['id'] == 0)
+    {
+        fetch('/api/jewelry/', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: responseBody,
+        })
+            .then(response => response.json())
+            .then(response => console.log(JSON.stringify(response)));
+    }
+    else
+    {
+        fetch('/api/jewelry/', {
+        method: 'PUT',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: responseBody,
+        })
+            .then(response => response.json())
+            .then(response => console.log(JSON.stringify(response)));
+    }
+
+
+}
+function init() {
+
+	renderer = new THREE.WebGLRenderer( { antialias: true,preserveDrawingBuffer: true } );
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setSize( container.clientWidth, container.clientWidth );
+	renderer.localClippingEnabled = true;
+	container.appendChild( renderer.domElement );
+
+	scene = new THREE.Scene();
+
+	camera = new THREE.PerspectiveCamera( 40, container.clientWidth / container.clientWidth, 1, 200 );
+
+	camera.position.set( - 1.5, 2.5, 3.0 );
+
+	const controls = new OrbitControls( camera, renderer.domElement );
+	controls.addEventListener( 'change', render ); // use only if there is no animation loop
+	controls.minDistance = 1;
+	controls.maxDistance = 10;
+	controls.enablePan = false;
+
+	const light = new THREE.HemisphereLight( 0xffffff, 0x080808, 1.5 );
+	light.position.set( - 1.25, 1, 1.25 );
+	scene.add( light );
+
+	render();
+	window.addEventListener( 'resize', onWindowResize );
+
+}
+
+function onWindowResize() {
+
+	camera.aspect = container.clientWidth / container.clientWidth;
+	camera.updateProjectionMatrix();
+
+	renderer.setSize( container.clientWidth, container.clientWidth );
+
+	render();
+
+}
+
+function render()
+{
+	renderer.render( scene, camera );
+    console.log('render');
+}
+
+</script>}
+{% endblock %}

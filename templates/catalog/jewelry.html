@@ -1,0 +1,18 @@
+{% extends "index.html" %}
+{% block title %}Изделие - {{jewelry.name}},{{jewelry.material}} {% endblock %}
+{% block content %}
+
+<div>
+<img src="/storage/{{ jewelry.preview }}" alt="{{jewelry.name}},{{jewelry.material}}">
+    <p>Материал - {{ material }}</p>
+    <p>Ориентировочная цена (19 размер) - {{ jewelry.cost }} р.</p>
+{% if user.is_authenticated %}
+<form method="post" action="/my/addtocart">
+    {% csrf_token %}
+    <input type="hidden" name="item" value="{{ jewelry.id }}">
+    <input type="number" id="quantity" name="quantity" title="Количество: ">
+    <button type="submit">Добавить в корзину</button>
+</form>
+{% endif %}
+</div>
+{% endblock %}

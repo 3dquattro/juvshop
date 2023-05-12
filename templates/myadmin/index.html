@@ -1,0 +1,49 @@
+{% extends "index.html" %}
+{% block title %}Личный кабинет - Главная страница{% endblock %}
+
+{% block content %}
+    </br>
+    {% if admin %}
+    <a class="btn btn-primary" href="/my/parts">Посмотреть детали</a></br><p></p>
+    <a class="btn btn-primary" href="/my/part_types">Посмотреть типы деталей</a></br><p></p>
+    <a class="btn btn-primary" href="/my/product_types">Посмотреть типы изделий</a></br><p></p>
+    <a class="btn btn-primary" href="/my/materials">Посмотреть материалы</a></br><p></p>
+    <a class="btn btn-primary" href="/my/jewelries">Посмотреть изделия</a></br><p></p>
+    <a class="btn btn-primary" href="/my/orders">Просмотреть заказы</a></br>
+    <p>- - - - -</p>
+    {% endif %}
+    <a href="/constructor/" class="btn btn-primary">Открыть конструктор</a>
+    {% if jewelry %}
+    <p>Изделия:</p>
+    <div id="carousel" class="carousel carousel-dark slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+{% for element in jewelry %}
+    {% if forloop.first %}
+        <button type="button" data-bs-target="#carousel" data-bs-slide-to="{{forloop.counter0}}" aria-label="{{element.name}}" class="active"></button>
+    {% else %}
+    <button type="button" data-bs-target="#carousel" data-bs-slide-to="{{forloop.counter0}}" aria-label="{{element.name}}"></button>
+    {% endif %}
+{% endfor %}
+    </div>
+ <div class="carousel-inner">
+{% for element in jewelry %}
+    <div class="carousel-item{% if forloop.first %} active{% else %}{% endif %}" data-bs-interval="2000">
+  <a href="/catalog/jewelry/{{element.id}}"><img src="/storage/{{ element.preview }}" class="d-block w-100" alt="Нет превью">
+  <div class="carousel-caption d-none d-md-block">
+    <h5>{{element.name}}</h5>
+    <p>{{element.type__name}},{{element.material__name}}</p>
+  </div> </a>
+</div>
+{% endfor %}
+ </div>{% endif %}
+<button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Предыдущий</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Следующий</span>
+  </button>
+    </div>
+
+{% endblock %}

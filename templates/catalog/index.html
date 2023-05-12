@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for element in page %}
+    <div class="col">
+	<a href="/catalog/jewelry/{{element.id}}"><div class="card bg-dark text-white h-100">
+	<img src="/storage/{{element.preview}}" class="card-img" alt="{{element.name}}">
+	<div class="card-img-overlay">
+		<h5 class="card-title">{{element.name}}</h5>
+		<p class="card-text">{{element.material__name}}</p>
+	</div>
+    </div></a>
+  </div>
+    {% endfor %}
+</div>
+    {% for pg in page_range %}
+        <a href="/catalog/{{pg}}">{{ pg }}</a>
+    {% endfor %}
+
+{% endblock %}

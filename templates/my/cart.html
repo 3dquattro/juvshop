@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+<h1>Корзина</h1>
+    <h2>Стоимость товаров: {{ total }} руб.</h2>
+    <h2>Адрес: г. Оренбург, ул. Космическая, д. 5/1</h2>
+    <a href="order/confirm">Оформить заказ</a>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Цикл по заказу-->
+    {% for element in positions %}
+    <div class="col">
+	<a href="/catalog/jewelry/{{ element.jewelry__id }}"><div class="card bg-dark text-white h-100">
+	<img src="/storage/{{element.jewelry__preview}}" class="card-img" alt="{{element.jewelry__name}}">
+	<div class="card-img-overlay">
+		<h5 class="card-title">{{element.jewelry.name}}</h5>
+    </div>
+	</div></a>
+  <div class="card-body">
+    <a href="/catalog/jewelry/{{ element.jewelry__id }}"><h5 class="card-title">{{element.jewelry__name}}</h5></a>
+    <p class="card-text">Количество: <input type="number" name="attend" id="attend" required value="{{element.quantity}}" /></p>
+    <p class="card-text">Материал: {{element.jewelry__material__name}}</p>
+    <p class="card-text">Приблизительный вес: {{element.jewelry__weight}} г.</p>
+    <p class="card-text">Стоимость: {{element.jewelry__cost}} руб.</p>
+  </div>
+  </div>
+    {% endfor %}
+  </div>
+    <a href="cart/makeorder">Оформить заказ</a>
+{% endblock %}

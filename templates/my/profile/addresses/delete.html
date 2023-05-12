@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+{% block title %}Удаление адреса{% endblock %}
+{% block content %}
+</br>
+<h3 class="breadcrumb"><a href="/my/profile">Профиль</a>/<a href="/my/profile/addresses">Адреса</a>/Удаление</h3></br>
+<p></p>
+ <h1>Удаление адреса</h1>
+    </br>
+    <p>Вы уверены, что хотите удалить адрес {{ object }}?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Удалить</button>
+  </form>
+{% endblock %}

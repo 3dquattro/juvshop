@@ -1,0 +1,28 @@
+{% extends "index.html" %}
+{% block title %}Заказ - от {{ positions.0.order__order_date }}{% endblock %}
+{% block content %}
+<h1>Заказ от {{ positions.0.order__order_date }} <span class="badge rounded-pill {{ status.1}}">{{ status.0 }}</span> </h1>
+    <h2>Стоимость заказа: {{total}} руб.</h2>
+    <h2>{{ positions.0.order__address}}</h2>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Цикл по заказу-->
+   {% for element in positions %}
+    <div class="col">
+	<a href="/my/jewelry/{{ element.jewelry__id }}"><div class="card bg-dark text-white h-100">
+	<img src="/storage/{{element.jewelry__preview}}" class="card-img" alt="{{element.jewelry__name}}">
+	<div class="card-img-overlay">
+		<h5 class="card-title">{{element.jewelry__name}}</h5>
+    </div>
+	</div></a>
+  <div class="card-body">
+    <a href="/my/jewelry/{{element.jewelry__id}}"><h5 class="card-title">{{element.jewelry__name}}</h5></a>
+    <p class="card-text">Количество: {{element.quantity}} шт.</p>
+    <p class="card-text">Материал: {{element.jewelry__material__name}}</p>
+    <p class="card-text">Приблизительный вес: {{element.jewelry__weight}} г.</p>
+    <p class="card-text">Стоимость: {{element.jewelry__cost}} руб.</p>
+  </div>
+  </div>
+    {% endfor %}
+  </div>
+
+{% endblock %}

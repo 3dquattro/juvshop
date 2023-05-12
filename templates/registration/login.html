@@ -1,0 +1,14 @@
+{% extends 'index.html' %}
+{% block title %}Авторизация{% endblock %}
+{% block content %}
+<form method="post" action="/my/login/">
+  {% csrf_token %}
+  <label for="email">Email:</label><br>
+  <input type="text" id="email" name="email"><br>
+  <label for="password">Пароль:</label><br>
+  <input type="password" id="password" name="password">
+    <button type="submit">Войти</button></br>
+  <a href="/my/register">Создать аккаунт</a>
+
+</form>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+{% block title %}Сообщения{% endblock %}
+{% block content %}
+    <ul>
+    {% for dialogue in dialogues %}
+    <li><a href="/my/messages/{{ dialogue.order__id }}">Заказ №{{dialogue.order__id}}</a></li>
+    {% endfor %}
+    <li><a href="/my/messages/2">Заказ №...</a></li>
+    </ul>
+
+{% endblock %}

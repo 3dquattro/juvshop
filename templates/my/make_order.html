@@ -1,0 +1,32 @@
+{% extends "index.html" %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+<h1>Корзина <span class="badge rounded-pill bg-primary">Оформлен</span> </h1>
+    <!--<form action="order/confirm" id="make_order_form"> -->
+    <h2>Стоимость товаров: {{ total }} руб.</h2>
+        <h2>Адрес: </h2><!--<input type="text" id="address">-->
+    <!--</form>-->
+
+    <a href="order/confirm/{{  }}">Оформить заказ</a>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Цикл по заказу-->
+    {% for element in positions %}
+    <div class="col">
+	<a href="/catalog/jewelry/{{ element.jewelry.id }}"><div class="card bg-dark text-white h-100">
+	<img src="/storage/{{element.jewelry.preview}}" class="card-img" alt="{{element.jewelry.name}}">
+	<div class="card-img-overlay">
+		<h5 class="card-title">{{element.jewelry.name}}</h5>
+    </div>
+	</div></a>
+  <div class="card-body">
+    <a href="/catalog/jewelry/{{ element.jewelry.id }}"><h5 class="card-title">{{element.jewelry.name}}</h5></a>
+    <p class="card-text">Количество: <input type="number" name="attend" id="attend" required value="{{element.quantity}}" /></p>
+    <p class="card-text">Материал: {{element.jewelry.material.name}}</p>
+    <p class="card-text">Приблизительный вес: {{element.jewelry.weight}} г.</p>
+    <p class="card-text">Стоимость: {{element.jewelry.cost}} руб.</p>
+  </div>
+  </div>
+    {% endfor %}
+  </div>
+    <!--<a href="javascript:void(0)" onclick="document.querySelector('make_order_form').submit()">Оформить заказ</a>-->
+{% endblock %}

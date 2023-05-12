@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+{% block title %}Создание адреса{% endblock %}
+{% block content %}
+</br>
+<h3 class="breadcrumb"><a href="/my/profile">Профиль</a>/<a href="/my/profile/addresses">Адреса</a>/Создание</h3></br>
+<p></p>
+ <h1>Добавить новый адрес</h1>
+    </br>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+  </form>
+{% endblock %}

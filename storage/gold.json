@@ -1,0 +1,26 @@
+{
+    "metadata": {
+        "version": 4.5,
+        "type": "Material",
+        "generator": "Material.toJSON"
+    },
+    "uuid": "c40d70f0-ae60-462a-93e4-ec93c491db5b",
+    "type": "MeshStandardMaterial",
+    "color": 16766720,
+    "roughness": 0.2,
+    "metalness": 0.7,
+    "emissive": 0,
+    "envMapIntensity": 1,
+    "depthFunc": 3,
+    "depthTest": true,
+    "depthWrite": true,
+    "colorWrite": true,
+    "stencilWrite": false,
+    "stencilWriteMask": 255,
+    "stencilFunc": 519,
+    "stencilRef": 0,
+    "stencilFuncMask": 255,
+    "stencilFail": 7680,
+    "stencilZFail": 7680,
+    "stencilZPass": 7680
+}

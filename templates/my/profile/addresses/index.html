@@ -1,0 +1,10 @@
+{% extends 'index.html' %}
+{% load render_table from django_tables2 %}
+{% block content %}
+    </br>
+    <h3 class="breadcrumb"><a href="/my/profile">Профиль</a>/Адреса</h3></br>
+    <h2>Список адресов пользователя {{ request.user.email }}</h2>
+    <p></p>
+<a class="btn btn-primary" href="/my/profile/addresses/create">Создать</a><p></p>
+{% render_table table %}
+{% endblock %}
